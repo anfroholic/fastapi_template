@@ -1,5 +1,5 @@
 
-from fastapi import Depends, FastAPI, Request, Form
+from fastapi import Depends, FastAPI, Request, Form, Body
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
@@ -7,14 +7,53 @@ from starlette.responses import RedirectResponse
 from pydantic import BaseModel
 import os
 
-ENV_1 = os.getenv("ENV_1")
-ENV_2 = os.getenv("ENV_2")
 
-class FormModel(BaseModel):
-    form1: str
-    form2: str
-    form3: str
-    form4: str
+
+class User:
+    def __init__(self, name, email, admin):
+        self.is_authenticated = True
+        self.name = name
+        self.is_admin = admin
+        self.email = email
+
+test_user = User('testy McTestface', 'test@test.com', True)
+
+
+areas = {
+    'lasers': ['boss', 'universal'],
+    'cnc': ['shopbot'],
+    '3dprinters': ['fdm_3dprinters'],
+    'cold_metals': ['cnc_lathe', 'tormach'],
+    'hot_metals': ['mig_welder', 'tig_welder', 'forge'],
+    'woodshop': ['wood_lathe', 'bandsaw', 'sawstop'],
+}    
+
+
+class Member:
+    def __init__(self, name, email, status, joined, authorizations):
+        self.name = name
+        self.email = email
+        self.status = status
+        self.joined = joined
+        self.authorizations = authorizations
+        self.id_checked = True
+        
+test_member = Member(
+    name='testy McTestface',
+    email='test@test.com',
+    status='active',
+    joined='2023-01-01',
+    authorizations=[
+        'boss',
+        'universal',
+        'shopbot',
+        'fdm_3dprinters',
+        'bandsaw', 
+        'sawstop',
+    ]
+)
+
+
 
 app = FastAPI()
 templates = Jinja2Templates(directory='htmldirectory')
@@ -23,7 +62,15 @@ app.mount("/static", StaticFiles(directory="static", html=True), name="static")
 
 @app.get('/', response_class=HTMLResponse)
 async def home(request: Request):
-    return templates.TemplateResponse('index.html', {'request': request, 'env_1': ENV_1, 'env_2': ENV_2})
+    return templates.TemplateResponse('base.html', {'request': request, 'content': '', "search": 'none', "current_user": test_user, 'active_page': 'home'})
+
+@app.get('/search', name='search', response_class=HTMLResponse)
+async def home(request: Request):
+    return templates.TemplateResponse('search.html', {'request': request, "search": 'none', "current_user": test_user})
+
+@app.get('/member', name='member', response_class=HTMLResponse)
+async def home(request: Request):
+    return templates.TemplateResponse('member.html', {'request': request, 'content': '', "search": 'none', "current_user": test_user, 'member': test_member, 'active_page': 'member', 'areas': areas})
 
 
 @app.get('/redirect', response_class=HTMLResponse)
@@ -31,25 +78,7 @@ async def redir(request: Request):
     response = RedirectResponse(url='/')
     return response
 
-@app.get('/arg/{arg}', response_class=JSONResponse)
-async def arg(arg: str):
-    return {"the_arg_is": arg}
-
-@app.post('/query_form', response_class=JSONResponse)
-async def q_form(request: Request, form1: str=Form(...), form2: str=Form(...)):
-    return {"form1": form1, "form2": form2}
-
-@app.post('/query_raw', response_class=JSONResponse)
-async def q_raw(request: Request):
-    raw_form = dict(await request.form())
-    
-    return {"raw_form": raw_form}
-
-@app.get('/query_get', response_class=JSONResponse)
-async def q_get(request: Request, form1: str, form2:str):
-    return {"form1": form1, 'form2': form2}
-
-@app.post('/form_model', response_class=JSONResponse)
-async def f_model(request: Request, form_model: FormModel):
-    print(form_model)
-    return {"form_model": form_model}
+@app.post('/set_member', response_class=JSONResponse)
+async def set_member(request: Request, body: dict = Body(...)):
+    print(body)
+    return body

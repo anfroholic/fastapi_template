@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>{% block title %}PS:One Admin{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <!-- PS:One theme overrides -->
+    <style>
+        :root {
+            --psone-red: #b31b1b;
+            --psone-dark: #1f1f1f;
+        }
+
+        .navbar {
+            background-color: var(--psone-dark);
+        }
+
+        .navbar-brand {
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background-color: var(--psone-red);
+            border-color: var(--psone-red);
+        }
+
+        .btn-primary:hover {
+            background-color: #991616;
+            border-color: #991616;
+        }
+    </style>
+
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body class="d-flex flex-column min-vh-100">
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container-fluid">
+
+        <a class="navbar-brand" href="/}">
+            Pumping Station: One
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <!-- Left nav -->
+            <ul class="navbar-nav me-auto">
+
+                <li class="nav-item">
+                    <a class="nav-link {% if active_page == 'home' %}active{% endif %}"
+                       href="/">
+                        Home
+                    </a>
+                </li>
+
+                {% if current_user.is_admin %}
+                <li class="nav-item">
+                    <a class="nav-link {% if active_page == 'search' %}active{% endif %}"
+                       href="/search">
+                        Search
+                    </a>
+                </li>
+                {% endif %}
+
+                {% if current_user.is_admin %}
+                <li class="nav-item">
+                    <a class="nav-link {% if active_page == 'member' %}active{% endif %}"
+                       href="/member">
+                        Test Member
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+
+            <!-- Right nav -->
+            <ul class="navbar-nav">
+                {% if current_user.is_authenticated %}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button"
+                       data-bs-toggle="dropdown">
+                        {{ current_user.name }}
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <span class="dropdown-item-text small text-muted">
+                                {{ current_user.email }}
+                            </span>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item" href="/logout">
+                                Logout
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- MAIN -->
+<main class="flex-grow-1">
+    <div class="container py-4">
+        {% block content %}{% endblock %}
+    </div>
+</main>
+
+<!-- FOOTER -->
+<footer class="border-top bg-light">
+    <div class="container py-3 d-flex justify-content-between">
+        <span class="text-muted">
+            © 2025 Pumping Station: One
+        </span>
+        <span class="text-muted small">
+            <a href="https://github.com/pumpingstationone/deepharbor">Deep Harbor</a> Internal Administrative System
+        </span>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% set active_page = "member" %}
+
+{% block title %}Members – PS:One Admin{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Member Management</h1>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Status</th>
+            <th>Joined</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>{{ member.name }}</td>
+            <td>{{ member.email }}</td>
+            <td>{{ member.status }}</td>
+            <td>{{ member.joined }}</td>
+        </tr>
+    </tbody>
+</table>
+
+
+
+<h3 class="mb-3">Authorizations</h1>
+{% for area, machines in areas.items() %}
+    <h4 class="mb-3">{{ area }}</h4>
+    <ul class="list-unstyled">
+        {% for machine in machines %}
+            <li>
+            <input type="checkbox" class="machine-checkbox" value="{{ machine }}" {% if machine in member.authorizations %}checked{% endif %}>
+            <label>{{ machine }}</label>
+            </li>
+        {% endfor %}
+    </ul>
+{% endfor %}
+
+<button id="save-btn" class="btn btn-primary mt-4">Save Changes</button>
+
+
+<div id="order">
+</div>
+
+
+<script>
+    document.getElementById('save-btn').addEventListener('click', function() {
+        const user = {
+            name:"{{ member.name }}",
+            email:"{{ member.email }}",
+            status:"{{ member.status }}",
+            id_checked:"{{ member.id_checked }}",
+            authorizations:[],
+        };
+
+        const checkboxes = document.querySelectorAll('.machine-checkbox');
+        
+        checkboxes.forEach(checkbox => {
+            if (checkbox.checked) {
+                user.authorizations.push(checkbox.value);
+            }
+        });
+        fetch('/set_member', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(user)
+        })
+        .then(response => response.json())
+        .then(result => document.getElementById('order').innerHTML = '<pre>' + JSON.stringify(result, null, 2) + '</pre>');
+    });
+</script>
+
+
+{% endblock %}

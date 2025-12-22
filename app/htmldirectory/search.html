@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% set active_page = "search" %}
+
+{% block title %}Search – PS:One Admin{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Search</h1>
+
+<form class="row g-3">
+    <div class="col-md-10">
+        <input type="text" class="form-control"
+               placeholder="Search members, emails, IDs…">
+    </div>
+    <div class="col-md-2">
+        <button class="btn btn-primary w-100">
+            Search
+        </button>
+    </div>
+</form>
+
+<hr>
+
+<div class="text-muted">
+    Search results will appear here.
+</div>
+{% endblock %}
