@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Results - 2026 Capital Expense Wishlist</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        h2 {
+            text-align: center;
+            color: #666;
+            font-weight: normal;
+            margin-top: 0;
+            margin-bottom: 30px;
+        }
+        .voter-count {
+            text-align: center;
+            background: #f0f0f0;
+            padding: 10px 20px;
+            border-radius: 20px;
+            display: inline-block;
+            margin: 0 auto 30px;
+            width: 100%;
+        }
+        .voter-count strong {
+            color: #667eea;
+        }
+        .no-votes {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+        .no-votes p {
+            font-size: 18px;
+        }
+        .leaderboard {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            margin-bottom: 12px;
+            border-radius: 12px;
+            background: #f8f9fa;
+            transition: transform 0.2s;
+        }
+        .leaderboard-item:hover {
+            transform: translateX(5px);
+        }
+        .leaderboard-item.rank-1 {
+            background: linear-gradient(135deg, #ffd700 0%, #ffec8b 100%);
+            font-size: 1.2em;
+            padding: 20px;
+        }
+        .leaderboard-item.rank-2 {
+            background: linear-gradient(135deg, #c0c0c0 0%, #e8e8e8 100%);
+            font-size: 1.1em;
+            padding: 18px;
+        }
+        .leaderboard-item.rank-3 {
+            background: linear-gradient(135deg, #cd7f32 0%, #daa06d 100%);
+            font-size: 1.05em;
+            padding: 16px;
+        }
+        .rank {
+            font-weight: bold;
+            font-size: 1.5em;
+            width: 50px;
+            text-align: center;
+            color: #333;
+        }
+        .rank-1 .rank {
+            font-size: 2em;
+        }
+        .item-name {
+            flex: 1;
+            font-weight: 500;
+            color: #333;
+        }
+        .stats {
+            text-align: right;
+        }
+        .points {
+            font-weight: bold;
+            font-size: 1.2em;
+            color: #667eea;
+        }
+        .rank-1 .points {
+            font-size: 1.5em;
+        }
+        .vote-count {
+            font-size: 0.85em;
+            color: #888;
+        }
+        .trophy {
+            font-size: 1.5em;
+            margin-right: 10px;
+        }
+        .rank-1 .trophy {
+            font-size: 2em;
+        }
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 30px;
+            color: #667eea;
+            text-decoration: none;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        .refresh-note {
+            text-align: center;
+            color: #999;
+            font-size: 0.85em;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>2026 Capital Expense Wishlist</h1>
+        <h2>Voting Results</h2>
+
+        <div class="voter-count">
+            <strong>{{ total_voters }}</strong> vote{{ 's' if total_voters != 1 else '' }} recorded
+        </div>
+
+        {% if leaderboard %}
+        <ul class="leaderboard">
+            {% for item, data in leaderboard %}
+            <li class="leaderboard-item rank-{{ loop.index if loop.index <= 3 else 'other' }}">
+                <span class="rank">
+                    {% if loop.index == 1 %}
+                    <span class="trophy">&#127942;</span>
+                    {% elif loop.index == 2 %}
+                    <span class="trophy">&#129352;</span>
+                    {% elif loop.index == 3 %}
+                    <span class="trophy">&#129353;</span>
+                    {% else %}
+                    #{{ loop.index }}
+                    {% endif %}
+                </span>
+                <span class="item-name">{{ item }}</span>
+                <span class="stats">
+                    <div class="points">{{ data.points }} pts</div>
+                    <div class="vote-count">{{ data.votes }} vote{{ 's' if data.votes != 1 else '' }}</div>
+                </span>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <div class="no-votes">
+            <p>No votes have been cast yet.</p>
+            <p>Be the first to vote!</p>
+        </div>
+        {% endif %}
+
+        <a href="/vote" class="back-link">&#8592; Back to voting</a>
+        <p class="refresh-note">Refresh the page to see updated results</p>
+    </div>
+</body>
+</html>

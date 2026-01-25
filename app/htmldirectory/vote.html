@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026 Area Host Budget Summit Extravaganza</title>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        h2 {
+            text-align: center;
+            color: #666;
+            font-weight: normal;
+            margin-top: 0;
+        }
+        .instructions {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .name-input {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .name-input:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+        #sortable-list {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 20px 0;
+        }
+        #sortable-list li {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 15px 15px 15px 50px;
+            margin-bottom: 10px;
+            cursor: grab;
+            position: relative;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        #sortable-list li:hover {
+            border-color: #007bff;
+        }
+        #sortable-list li.sortable-ghost {
+            opacity: 0.4;
+        }
+        #sortable-list li.sortable-chosen {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .rank-number {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #007bff;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .submit-btn:hover {
+            background: #218838;
+        }
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .error-message {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        #vote-form, #thank-you {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        #thank-you {
+            display: none;
+            text-align: center;
+        }
+        #thank-you h2 {
+            color: #28a745;
+            font-size: 28px;
+        }
+        #your-rankings {
+            text-align: left;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        #your-rankings ol {
+            margin: 10px 0 0 0;
+            padding-left: 25px;
+        }
+        #your-rankings li {
+            padding: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>2026 Area Host Budget Summit Extravaganza</h1>
+    <h2>2026 Capital Expense Wishlist</h2>
+
+    <div id="vote-form">
+        <div class="instructions">
+            <strong>Instructions:</strong> Enter your name, then drag and drop the items below to rank them.
+            Your top choice should be #1.
+        </div>
+
+        <div class="error-message" id="error-message"></div>
+
+        <input type="text" class="name-input" id="voter-name" placeholder="Enter your name" required>
+
+        <ul id="sortable-list"></ul>
+
+        <button class="submit-btn" id="submit-btn" onclick="submitVote()">Submit Vote</button>
+    </div>
+
+    <div id="thank-you">
+        <h2>Thank You For Your Vote!</h2>
+        <p>Your ranked choices have been recorded.</p>
+        <div id="your-rankings">
+            <strong>Your rankings:</strong>
+            <ol id="rankings-display"></ol>
+        </div>
+    </div>
+
+    <script>
+        // Edit this list to change the voting choices
+        const choices = [
+            "Roof Access Hatch    $3,000    Gen Ops",
+            "Air Conditioning Improvements    $10,000    Gen Ops",
+            "Drill Press    $3,000    Woodshop",
+            "Laser Engraver    $10,000    Lasers",
+            "30A 240V small metals    $2,000    Small Metals",
+            "Electrical Infrastructure    $8,000    Gen Ops",
+            "Edge Sander     $3,500    Woodshop",
+            "Lasers Roof Exhaust    $5,000    Lasers",
+            "Cameras     $4,000    Admin/Board",
+            "Xerox    $3,000    2D Printing",
+            "Dock Heating    $3,000    Gen Ops",
+            "Makeup Air Unit    $10,000    Gen Ops",
+            "Mimaki     $10,000    2D Printing",
+            "Front/Back Door Access Controls    $3,000    Admin/Board",
+        ];
+
+        // Initialize the sortable list
+        const listEl = document.getElementById('sortable-list');
+
+        function renderList() {
+            listEl.innerHTML = '';
+            choices.forEach((choice, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = `<span class="rank-number">${index + 1}</span>${choice}`;
+                li.dataset.value = choice;
+                listEl.appendChild(li);
+            });
+        }
+
+        renderList();
+
+        // Initialize SortableJS
+        const sortable = new Sortable(listEl, {
+            animation: 150,
+            ghostClass: 'sortable-ghost',
+            chosenClass: 'sortable-chosen',
+            onEnd: function() {
+                // Update rank numbers after sorting
+                const items = listEl.querySelectorAll('li');
+                items.forEach((item, index) => {
+                    item.querySelector('.rank-number').textContent = index + 1;
+                });
+            }
+        });
+
+        function showError(message) {
+            const errorEl = document.getElementById('error-message');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('error-message').style.display = 'none';
+        }
+
+        async function submitVote() {
+            hideError();
+
+            const name = document.getElementById('voter-name').value.trim();
+            if (!name) {
+                showError('Please enter your name.');
+                return;
+            }
+
+            const items = listEl.querySelectorAll('li');
+            const rankings = Array.from(items).map(li => li.dataset.value);
+
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+
+            try {
+                const response = await fetch('/vote', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name, rankings })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Show thank you screen
+                    document.getElementById('vote-form').style.display = 'none';
+                    document.getElementById('thank-you').style.display = 'block';
+
+                    // Display their rankings
+                    const rankingsDisplay = document.getElementById('rankings-display');
+                    rankingsDisplay.innerHTML = rankings.map(r => `<li>${r}</li>`).join('');
+                } else {
+                    showError(result.error || 'Failed to submit vote.');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Submit Vote';
+                }
+            } catch (err) {
+                showError('Network error. Please try again.');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Vote';
+            }
+        }
+    </script>
+</body>
+</html>
