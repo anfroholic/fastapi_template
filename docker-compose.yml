@@ -13,7 +13,7 @@ services:
         ENV_1: ${ENV_1}
         ENV_2: ${ENV_2}
       ports:
-        - 8000:8000
+        - 8888:8000
       volumes:
         - ./app:/app
   
