@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin</title>
+</head>
+<body>
+
+<h1>Admin Panel</h1>
+
+<p>Active Sessions</p>
+
+<table border="1">
+    <tr>
+        <th>Session ID (JTI)</th>
+        <th>User</th>
+        <th>Roles</th>
+        <th>Expires</th>
+        <th>Action</th>
+    </tr>
+
+    {% for jti, s in sessions.items() %}
+        <tr>
+            <td>{{ jti }}</td>
+            <td>{{ s.sub }}</td>
+            <td>{{ s.roles }}</td>
+            <td>{{ s.exp }}</td>
+            <td>
+                <form method="post" action="/api/admin/revoke/{{ jti }}">
+                    <button type="submit">Revoke</button>
+                </form>
+            </td>
+        </tr>
+    {% endfor %}
+</table>
+
+<p><a href="/">Back to home</a></p>
+
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Auth Demo</title>
+</head>
+<body>
+
+<h1>FastAPI Auth Demo</h1>
+
+{% if user %}
+    <p>
+        Logged in as <strong>{{ user.sub }}</strong><br>
+        Roles: {{ user.roles }}
+    </p>
+
+    <ul>
+        <li><a href="/api/me">/api/me</a></li>
+        <li><a href="/api/heartbeat">/api/heartbeat</a></li>
+        {% if "admin" in user.roles %}
+            <li><a href="/admin">Admin Panel</a></li>
+        {% endif %}
+    </ul>
+
+    <form method="post" action="/logout">
+        <button type="submit">Logout</button>
+    </form>
+
+{% else %}
+    <p>Not authenticated</p>
+
+    <form method="post" action="/login">
+        <input name="username" placeholder="username">
+        <button type="submit">Login</button>
+    </form>
+{% endif %}
+
+</body>
+</html>

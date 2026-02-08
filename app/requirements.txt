@@ -2,3 +2,5 @@ fastapi
 python-multipart
 jinja2
 uvicorn
+python-jose
+python-jose[cryptography]
