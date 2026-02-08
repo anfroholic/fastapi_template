@@ -1,0 +1,114 @@
+<!DOCTYPE HTML>
+
+
+<html>
+	<head>
+		<title>Example</title>
+		<link rel="icon" href="/static/favicon.ico">
+		<link rel="stylesheet" href="/static/style.css" />
+	</head>
+	<body>
+		<h1>Fasapi Example</h1>
+    <h2>produced by Evezor</h2>
+		
+		<img src="/static/logo.png" alt="evezor logo">
+		
+    <hr>
+    <h3>Environment Files</h3>
+		env_1: {{ env_1 }}<br>
+		env_2: {{ env_2 }}<br>
+		<a href="/redirect">/redirect</a><br>
+		
+		<a href="/arg/{{ env_1 }}">/arg/{{ env_1 }}</a><br>
+		<a href="/arg/{{ env_2 }}">/arg/{{ env_2 }}</a><br>
+		<hr>
+		<h3>/query_form</h3>
+		<form action="/query_form" method="post">
+			<input type="text" name="form1" id="form1" placeholder="form1"><br>
+			<input type="text" name="form2" id="form2" placeholder="form2"><br>
+			<input type="submit" value="Submit" class="button blue">
+		</form>
+    <hr>
+		<h3>/query_raw</h3>
+		<form action="/query_raw" method="post">
+			<input type="text" name="form1" id="form1" placeholder="form1"><br>
+			<input type="text" name="form2" id="form2" placeholder="form2"><br>
+			<input type="submit" value="Submit" class="xsm_button green">
+		</form>
+    <hr>
+		<h3>/query_get</h3>
+		<form action="/query_get" method="get">
+			<input type="text" name="form1" id="form1" placeholder="form1"><br>
+			<input type="text" name="form2" id="form2" placeholder="form2"><br>
+			<input type="submit" value="Submit" class="sm_button red">
+		</form>
+		<hr>
+    <h3>form_response</h3>
+    <div id="form_response"></div>
+    <h3>/form_model</h3>
+		<form id="form_model" onsubmit="return create_fetch()">
+			<input type="text" name="form1" id="fm_form1" placeholder="form1"><br>
+			<input type="text" name="form2" id="fm_form2" placeholder="form2"><br>
+			<input type="text" name="form3" id="fm_form3" placeholder="form3"><br>
+			<input type="text" name="form4" id="fm_form4" placeholder="form4"><br>
+			<input type="submit" value="Submit">
+		</form> <br>
+    
+    <hr>
+    <button class="xsm_button blue" onclick="console.log('button clicked')">simple button</button>
+		<br><br><br><br>
+    <hr>
+    <div id="footer">
+      <h3>footer</h3>
+      {% for i in range(10) %}
+        {{ i }}
+        {% if i%2 %}  
+          , odd
+        {% else %}
+          , even
+        {% endif %}
+        <br>
+      {% endfor %}
+    </div>
+    <br><br><br><br>
+    
+    <script>
+			function create_fetch(){
+				let fm_form1 = document.getElementById('fm_form1').value;
+        let fm_form2 = document.getElementById('fm_form2').value;
+        let fm_form3 = document.getElementById('fm_form3').value;
+        let fm_form4 = document.getElementById('fm_form4').value;
+
+        let dict = {
+          form1: fm_form1,
+          form2: fm_form2,
+          form3: fm_form3,
+          form4: fm_form4,
+        };
+        
+        do_fetch(dict)
+        return false       
+			}
+
+      async function do_fetch(dict) {
+        const response = await fetch('/form_model', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(dict)
+        });
+      
+        if (!response.ok) {
+          console.log('problems');
+        }
+        const body = await response.json();
+        console.log(body);
+        let form_response = JSON.stringify(body);
+        document.getElementById('form_response').innerHTML = form_response;
+      }
+      
+
+		</script>
+	</body>
+</html>
