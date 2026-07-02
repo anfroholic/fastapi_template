@@ -1,0 +1,38 @@
+{# Reusable display widgets shared by the catalog and detail pages. #}
+
+{% macro signoff_pips(c, show_labels=false) %}
+  <div class="pips" title="Signoff status">
+    {% for check in signoff_checks %}
+      {% set status = c.signoff.get(check, 'n/a') %}
+      {% set ok = status in ('clean', 'pass') %}
+      {% set warn = status == 'warn' %}
+      <span class="pip {{ 'ok' if ok else ('warn' if warn else 'bad') }}"
+            title="{{ check|upper }}: {{ status }}">
+        <span class="pip-dot"></span>
+        {% if show_labels %}<span class="pip-label">{{ check|upper }}</span>{% endif %}
+      </span>
+    {% endfor %}
+  </div>
+{% endmacro %}
+
+{% macro corner_matrix(c, compact=false) %}
+  <div class="cmatrix {{ 'compact' if compact }}"
+       title="{{ c.corner_count }} of 9 PVT corners characterized">
+    <div class="cmatrix-grid">
+      <span class="cm-corner-label"></span>
+      <span class="cm-col-head">min</span>
+      <span class="cm-col-head">nom</span>
+      <span class="cm-col-head">max</span>
+      {% for row in c.corner_matrix %}
+        <span class="cm-row-head">{{ row.process }}</span>
+        {% for cell in row.cells %}
+          <span class="cm-cell {{ 'on' if cell.present else 'off' }}"
+                title="{{ cell.name or (cell.point ~ '/' ~ cell.process ~ ' — not characterized') }}"></span>
+        {% endfor %}
+      {% endfor %}
+    </div>
+    {% if not compact %}
+      <div class="cmatrix-caption">{{ c.corner_count }}/9 corners</div>
+    {% endif %}
+  </div>
+{% endmacro %}

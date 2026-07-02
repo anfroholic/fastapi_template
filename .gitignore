@@ -1,0 +1,8 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Real layouts are committed gzip'd (app/components/*/gds/*.gds.gz, ~7.7 MB total;
+# KLayout reads them directly). Raw .gds are not committed.
+*.gds

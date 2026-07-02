@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Open Silicon Component Exchange{% endblock %}</title>
+  <link rel="icon" href="/static/favicon.ico">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/">
+      <span class="brand-mark">◈</span>
+      <span class="brand-text">Open Silicon <b>Component Exchange</b></span>
+    </a>
+    <form class="topsearch" action="/" method="get">
+      <input type="search" name="q" placeholder="Search macros — oscillator, uart, sram…"
+             value="{{ active.q if active else '' }}">
+      <button type="submit">Search</button>
+    </form>
+    <nav class="topnav">
+      <a href="/">Browse</a>
+      <a class="ghost" href="#" title="Not part of this prototype">Publish</a>
+    </nav>
+  </header>
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="sitefoot">
+    <span>A “Thingiverse for chips” — publish and drop-in pre-hardened silicon macros.</span>
+    <span class="muted">Prototype · display &amp; UX focus</span>
+  </footer>
+</body>
+</html>

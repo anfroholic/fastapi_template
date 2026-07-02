@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% import "_widgets.html" as w %}
+{% block content %}
+
+<section class="hero">
+  <h1>Drop-in silicon, ready to harden into your chip.</h1>
+  <p>Browse pre-hardened macros — oscillators, UARTs, SRAMs, filters — each shipped
+     with the four EDA views your flow needs. Reference one in your <code>MACROS:</code>
+     list and skip the hours of place-and-route.</p>
+</section>
+
+<div class="layout">
+  <aside class="filters">
+    <form action="/" method="get" id="filterform">
+      {% if active.q %}<input type="hidden" name="q" value="{{ active.q }}">{% endif %}
+
+      <div class="filter-group">
+        <label for="sort">Sort by</label>
+        <select name="sort" id="sort" onchange="this.form.submit()">
+          <option value="name"    {{ 'selected' if active.sort=='name' }}>Name</option>
+          <option value="area"    {{ 'selected' if active.sort=='area' }}>Smallest area</option>
+          <option value="freq"    {{ 'selected' if active.sort=='freq' }}>Fastest clock</option>
+          <option value="corners" {{ 'selected' if active.sort=='corners' }}>Most corners</option>
+        </select>
+      </div>
+
+      {% for key, values in facets.items() %}
+      <div class="filter-group">
+        <span class="filter-title">{{ key|capitalize }}</span>
+        <ul class="facet-list">
+          <li>
+            <a href="{{ facet_url(active, key, none) }}"
+               class="{{ 'active' if not active[key] }}">All</a>
+          </li>
+          {% for v in values %}
+          <li>
+            <a href="{{ facet_url(active, key, v) }}"
+               class="{{ 'active' if active[key]==v }}">{{ v }}</a>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endfor %}
+
+      <div class="filter-group">
+        <label class="checkbox">
+          <input type="checkbox" name="signoff_clean" value="true"
+                 {{ 'checked' if active.signoff_clean }} onchange="this.form.submit()">
+          Fully signed-off only
+        </label>
+      </div>
+    </form>
+  </aside>
+
+  <section class="results">
+    <div class="results-head">
+      <span>{{ components|length }} of {{ total }} macros</span>
+      <div class="legend">
+        <span class="lg in">input</span>
+        <span class="lg out">output</span>
+        <span class="lg io">inout</span>
+      </div>
+    </div>
+
+    {% if not components %}
+      <p class="empty">No macros match those filters. <a href="/">Clear all</a>.</p>
+    {% endif %}
+
+    <div class="grid">
+      {% for c in components %}
+      <a class="card" href="/component/{{ c.name }}">
+        <div class="card-fp">
+          {% if c.has_render %}
+            <img class="card-render" src="/component/{{ c.name }}/render.png" alt="Layout of {{ c.name }}" loading="lazy">
+          {% else %}
+            {{ c.footprint_svg(labels=false)|safe }}
+          {% endif %}
+          <span class="tier-badge {{ c.tier }}">{{ c.tier }}</span>
+          {% if c.has_audio %}
+            <button type="button" class="audio-btn" title="Play preview"
+                    data-audio="{{ c.audio_url }}"
+                    onclick="playPreview(event, this)">▶</button>
+          {% endif %}
+        </div>
+        <div class="card-body">
+          <div class="card-title">
+            <span class="fn-icon">{{ c.icon }}</span>
+            <h3>{{ c.name }}</h3>
+          </div>
+          <p class="card-desc">{{ c.description }}</p>
+          <div class="card-tags">
+            <span class="tag">{{ c.function }}</span>
+            <span class="tag node">{{ c.node }}</span>
+            <span class="tag">{{ c.pdk }}</span>
+          </div>
+          <div class="card-stats">
+            <span title="Footprint">▭ {{ c.width_um }}×{{ c.height_um }} µm</span>
+            <span title="Target clock">⏱ {{ c.clock_label }}</span>
+            <span title="Signal pins">⇄ {{ c.pin_count }}</span>
+          </div>
+          <div class="card-foot">
+            {{ w.signoff_pips(c) }}
+            {{ w.corner_matrix(c, compact=true) }}
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+
+<script>
+// One shared <audio>; clicking a card's play button previews without navigating.
+let _preview = null, _activeBtn = null;
+function playPreview(ev, btn) {
+  ev.preventDefault(); ev.stopPropagation();
+  if (!_preview) { _preview = new Audio(); _preview.onended = resetBtn; }
+  const src = btn.dataset.audio;
+  if (_activeBtn === btn && !_preview.paused) { _preview.pause(); resetBtn(); return; }
+  resetBtn();
+  _preview.src = src; _preview.play();
+  _activeBtn = btn; btn.textContent = '⏸'; btn.classList.add('playing');
+}
+function resetBtn() {
+  if (_activeBtn) { _activeBtn.textContent = '▶'; _activeBtn.classList.remove('playing'); }
+  _activeBtn = null;
+}
+</script>
+{% endblock %}

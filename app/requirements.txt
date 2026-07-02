@@ -2,3 +2,4 @@ fastapi
 python-multipart
 jinja2
 uvicorn
+pyyaml

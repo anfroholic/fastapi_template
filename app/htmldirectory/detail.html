@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% import "_widgets.html" as w %}
+{% block title %}{{ c.name }} · Open Silicon Component Exchange{% endblock %}
+{% block content %}
+
+<nav class="crumbs"><a href="/">Browse</a> / <a href="/?function={{ c.function }}">{{ c.function }}</a> / <span>{{ c.name }}</span></nav>
+
+<div class="detail">
+  <div class="detail-main">
+    <header class="detail-head">
+      <span class="fn-icon big">{{ c.icon }}</span>
+      <div>
+        <h1>{{ c.name }}</h1>
+        <p class="lead">{{ c.description }}</p>
+        <div class="card-tags">
+          <span class="tag">{{ c.function }}</span>
+          <span class="tag node">{{ c.node }}</span>
+          <span class="tag">{{ c.pdk }}</span>
+          <span class="tag">{{ c.license }}</span>
+          <span class="tier-badge inline {{ c.tier }}">{{ c.tier }}</span>
+        </div>
+        {% if c.has_audio %}
+        <div class="audio-inline">
+          <span class="audio-label">🔊 Hear it</span>
+          <audio controls preload="none" src="{{ c.audio_url }}"></audio>
+        </div>
+        {% endif %}
+      </div>
+    </header>
+
+    {% if c.has_render %}
+    <section class="panel">
+      <h2>Layout <span class="muted">— rendered from the GDS (KLayout, GF180MCU layers)</span></h2>
+      <a href="/component/{{ c.name }}/render.png" target="_blank" rel="noopener">
+        <img class="layout-render" src="/component/{{ c.name }}/render.png" alt="Layout render of {{ c.name }}">
+      </a>
+      <p class="muted small">The GDS itself is opaque mask geometry; this is the same
+         KLayout render step the chip flow emits at signoff. Click to open full size.</p>
+    </section>
+    {% endif %}
+
+    <section class="panel footprint-panel">
+      <h2>Footprint <span class="muted">— parsed from LEF abstract</span></h2>
+      <div class="fp-large">{{ c.footprint_svg(labels=true)|safe }}</div>
+      <div class="legend big">
+        <span class="lg in">input</span>
+        <span class="lg out">output</span>
+        <span class="lg io">inout</span>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Signoff &amp; corner coverage</h2>
+      <div class="signoff-row">
+        {{ w.signoff_pips(c, show_labels=true) }}
+      </div>
+      <div class="corner-block">
+        {{ w.corner_matrix(c) }}
+        <div class="corner-note">
+          <p>Timing is characterized at <b>{{ c.corner_count }} of 9</b> PVT corners
+             (process × operating point). More corners → higher confidence the block
+             closes in your chip.</p>
+          <details>
+            <summary>List all corners</summary>
+            <ul class="corner-list">
+              {% for corner in c.corners %}<li><code>{{ corner }}</code></li>{% endfor %}
+            </ul>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>The four views</h2>
+      <p class="muted">A macro is a sealed black box shipped as standardized EDA views —
+         one for each stage of a downstream flow.</p>
+      <table class="views">
+        <thead><tr><th>View</th><th>File</th><th>Consumed at</th><th></th></tr></thead>
+        <tbody>
+          <tr>
+            <td><b>Layout</b></td><td><code>{{ c.gds_rel }}</code></td>
+            <td>Final streamout (opaque mask geometry, gzip'd)</td>
+            <td><a href="/component/{{ c.name }}/file/{{ c.gds_rel }}">download</a></td>
+          </tr>
+          <tr>
+            <td><b>Abstract</b></td><td><code>lef/{{ c.name }}.lef</code></td>
+            <td>Placement &amp; routing (outline + pins)</td>
+            <td><a href="/component/{{ c.name }}/file/lef/{{ c.name }}.lef">view</a></td>
+          </tr>
+          <tr>
+            <td><b>Interface</b></td><td><code>vh/{{ c.name }}.vh</code></td>
+            <td>Synthesis (black-box Verilog)</td>
+            <td><a href="/component/{{ c.name }}/file/vh/{{ c.name }}.vh">view</a></td>
+          </tr>
+          <tr>
+            <td><b>Timing</b></td><td><code>lib/&lt;corner&gt;/…lib</code></td>
+            <td>Static timing analysis ({{ c.corner_count }} corners)</td>
+            <td><span class="muted">{{ c.corner_count }} files</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="panel">
+      <h2>Interface</h2>
+      <table class="pins">
+        <thead><tr><th>Pin</th><th>Direction</th></tr></thead>
+        <tbody>
+          {% for p in c.macro.pins %}
+          <tr>
+            <td><code>{{ p.label }}</code></td>
+            <td><span class="dir {{ p.direction }}">{{ p.direction }}</span></td>
+          </tr>
+          {% endfor %}
+          {% for p in c.macro.power_pins %}
+          <tr>
+            <td><code>{{ p.name }}</code></td>
+            <td><span class="dir power">power</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+  </div>
+
+  <aside class="detail-side">
+    <div class="buy-box">
+      <a class="btn primary" href="/component/{{ c.name }}/download">⬇ Download package (.zip)</a>
+      <p class="tier-note">
+        {% if c.tier == 'source' %}
+          <b>Source tier</b> — includes RTL + hardening recipe. Re-harden or retarget freely.
+        {% else %}
+          <b>Binary tier</b> — closure for free, but not rebuildable. Source not published.
+        {% endif %}
+      </p>
+
+      <h3>Reference it</h3>
+      <p class="muted small">Drop into your flow's <code>MACROS:</code> list:</p>
+      <div class="snippet">
+        <button class="copy" onclick="copySnippet(this)">copy</button>
+        <pre id="snippet">{{ c.macros_snippet }}</pre>
+      </div>
+
+      <h3>Specs</h3>
+      <dl class="specs">
+        <dt>Function</dt><dd>{{ c.function }}</dd>
+        <dt>PDK</dt><dd>{{ c.pdk }}</dd>
+        <dt>Node</dt><dd>{{ c.node }}</dd>
+        <dt>Std cell</dt><dd><code>{{ c.stdcell }}</code></dd>
+        <dt>Footprint</dt><dd>{{ c.width_um }} × {{ c.height_um }} µm</dd>
+        <dt>Area</dt><dd>{{ '%.0f'|format(c.area_um2) }} µm²</dd>
+        {% if c.clock.get('period_ns') %}
+        <dt>Target clock</dt><dd>{{ c.clock.port }} @ {{ c.freq_mhz }} MHz ({{ c.clock.period_ns }} ns)</dd>
+        {% else %}
+        <dt>Clocking</dt><dd>async / combinational</dd>
+        {% endif %}
+        <dt>Signal pins</dt><dd>{{ c.pin_count }}{% if c.power_pin_count %} (+{{ c.power_pin_count }} power){% endif %}</dd>
+        <dt>License</dt><dd>{{ c.license }}</dd>
+      </dl>
+
+      <h3>Provenance</h3>
+      <p class="muted small">A binary GDS is opaque — trust comes from signoff status
+         and a link back to source you can rebuild.</p>
+      <a class="btn ghost" href="{{ c.source }}" target="_blank" rel="noopener">↗ Source &amp; build recipe</a>
+    </div>
+  </aside>
+</div>
+
+<script>
+function copySnippet(btn){
+  const text = document.getElementById('snippet').innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'copied!';
+    setTimeout(() => btn.textContent = 'copy', 1400);
+  });
+}
+</script>
+{% endblock %}

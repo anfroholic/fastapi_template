@@ -1,0 +1,21 @@
+name: gf180mcu_ws_ip__logo
+description: "wafer.space shuttle logo tile \u2014 decorative top-metal artwork dropped\
+  \ into the seal ring."
+function: branding
+pdk: gf180mcuD
+node: 180nm
+stdcell: gf180mcu_fd_sc_mcu7t5v0
+corners: []
+clock: {}
+size_um:
+- 143.25
+- 143.25
+signoff:
+  drc: clean
+  lvs: clean
+  setup: pass
+  hold: pass
+license: Apache-2.0
+source: https://github.com/anfroholic/eurosynth
+tier: binary
+preview_audio: false

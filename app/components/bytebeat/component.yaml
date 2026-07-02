@@ -1,0 +1,32 @@
+name: bytebeat
+description: "Bytebeat generator \u2014 a free-running integer formula over a sample\
+  \ counter produces surprisingly musical noise."
+function: audio
+pdk: gf180mcuD
+node: 180nm
+stdcell: gf180mcu_fd_sc_mcu7t5v0
+corners:
+- max_ff_n40C_5v50
+- max_ss_125C_4v50
+- max_tt_025C_5v00
+- min_ff_n40C_5v50
+- min_ss_125C_4v50
+- min_tt_025C_5v00
+- nom_ff_n40C_5v50
+- nom_ss_125C_4v50
+- nom_tt_025C_5v00
+clock:
+  port: clk
+  period_ns: 40
+size_um:
+- 213.12
+- 231.03
+signoff:
+  drc: clean
+  lvs: clean
+  setup: pass
+  hold: pass
+license: Apache-2.0
+source: https://github.com/anfroholic/eurosynth
+tier: source
+preview_audio: true

@@ -1,0 +1,21 @@
+name: gf180mcu_ws_ip__qrcode_id
+description: "QR-code die identifier \u2014 encodes the project/shuttle ID as an on-die\
+  \ scannable mark."
+function: identifier
+pdk: gf180mcuD
+node: 180nm
+stdcell: gf180mcu_fd_sc_mcu7t5v0
+corners: []
+clock: {}
+size_um:
+- 142.8
+- 142.8
+signoff:
+  drc: clean
+  lvs: clean
+  setup: pass
+  hold: pass
+license: Apache-2.0
+source: https://github.com/anfroholic/eurosynth
+tier: binary
+preview_audio: false
