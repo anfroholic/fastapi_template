@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 {% import "_widgets.html" as w %}
 {% block title %}{{ c.name }} · Open Silicon Component Exchange{% endblock %}
+{% block head %}
+  <link rel="stylesheet" href="/static/vendor/highlight/atom-one-dark.min.css">
+{% endblock %}
 {% block content %}
 
 <nav class="crumbs"><a href="/">Browse</a> / <a href="/?function={{ c.function }}">{{ c.function }}</a> / <span>{{ c.name }}</span></nav>
@@ -85,12 +88,16 @@
           <tr>
             <td><b>Abstract</b></td><td><code>lef/{{ c.name }}.lef</code></td>
             <td>Placement &amp; routing (outline + pins)</td>
-            <td><a href="/component/{{ c.name }}/file/lef/{{ c.name }}.lef">view</a></td>
+            <td><button type="button" class="linkbtn js-view"
+                        data-url="/component/{{ c.name }}/file/lef/{{ c.name }}.lef"
+                        data-name="{{ c.name }}.lef">view</button></td>
           </tr>
           <tr>
             <td><b>Interface</b></td><td><code>vh/{{ c.name }}.vh</code></td>
             <td>Synthesis (black-box Verilog)</td>
-            <td><a href="/component/{{ c.name }}/file/vh/{{ c.name }}.vh">view</a></td>
+            <td><button type="button" class="linkbtn js-view"
+                        data-url="/component/{{ c.name }}/file/vh/{{ c.name }}.vh"
+                        data-name="{{ c.name }}.vh">view</button></td>
           </tr>
           <tr>
             <td><b>Timing</b></td><td><code>lib/&lt;corner&gt;/…lib</code></td>
@@ -120,6 +127,39 @@
           {% endfor %}
         </tbody>
       </table>
+    </section>
+
+    <section class="panel">
+      <h2>Files <span class="muted">— everything in the package</span></h2>
+      <p class="muted small">Click <b>view</b> to read a file in-browser with syntax
+         highlighting. Binaries (GDS, renders, audio) download or open in a new tab.</p>
+      <div class="filetree">
+        {% for g in c.list_files() %}
+        <div class="filegroup">
+          <div class="filegroup-head">{{ g.dir }} <span class="muted">· {{ g.files|length }}</span></div>
+          <ul class="filelist">
+            {% for f in g.files %}
+            <li class="filerow">
+              <span class="fileicon {{ f.kind }}">
+                {%- if f.kind == 'text' %}📄{% elif f.kind == 'image' %}🖼️{% elif f.kind == 'audio' %}🎵{% else %}📦{% endif -%}
+              </span>
+              <span class="filename">{{ f.name }}</span>
+              <span class="filesize">{{ f.size_h }}</span>
+              {% if f.viewable %}
+                <button type="button" class="fileact js-view"
+                        data-url="/component/{{ c.name }}/file/{{ f.rel }}"
+                        data-name="{{ f.name }}">view</button>
+              {% elif f.kind == 'image' %}
+                <a class="fileact" href="/component/{{ c.name }}/file/{{ f.rel }}" target="_blank" rel="noopener">open</a>
+              {% else %}
+                <a class="fileact" href="/component/{{ c.name }}/file/{{ f.rel }}">download</a>
+              {% endif %}
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endfor %}
+      </div>
     </section>
   </div>
 
@@ -166,6 +206,24 @@
   </aside>
 </div>
 
+<!-- In-browser file viewer -->
+<div class="viewer" id="viewer" hidden>
+  <div class="viewer-backdrop" data-close></div>
+  <div class="viewer-box" role="dialog" aria-modal="true" aria-labelledby="viewer-name">
+    <header class="viewer-head">
+      <span class="viewer-file">📄 <b id="viewer-name"></b> <span class="muted" id="viewer-lang"></span></span>
+      <div class="viewer-actions">
+        <button type="button" class="viewer-copy" id="viewer-copy">copy</button>
+        <a class="viewer-download" id="viewer-download" href="#" download>download</a>
+        <button type="button" class="viewer-close" data-close aria-label="Close">✕</button>
+      </div>
+    </header>
+    <div class="viewer-body">
+      <pre class="viewer-pre"><code id="viewer-code" class="hljs"></code></pre>
+    </div>
+  </div>
+</div>
+
 <script>
 function copySnippet(btn){
   const text = document.getElementById('snippet').innerText;
@@ -175,4 +233,11 @@ function copySnippet(btn){
   });
 }
 </script>
+{% endblock %}
+
+{% block scripts %}
+  <script src="/static/vendor/highlight/highlight.min.js"></script>
+  <script src="/static/vendor/highlight/yaml.min.js"></script>
+  <script src="/static/vendor/highlight/verilog.min.js"></script>
+  <script src="/static/viewer.js"></script>
 {% endblock %}

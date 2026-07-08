@@ -7,10 +7,11 @@ views (gds/lef/vh/lib) — exactly what this catalog displays. They just lack a
 (size + corners are read from the real LEF/lib; the rest is curated per macro).
 
 Usage:
-    python import_eurosynth.py [path-to-eurosynth-repo]
+    python import_eurosynth.py [path-to-eurosynth-repo] [--only name[,name...]]
 
 Defaults to ../../eurosynth relative to this file. Re-runnable: it clears and
-rewrites app/components/ each time.
+rewrites app/components/ each time. With --only, it instead (re)imports just the
+named macros in place, leaving the rest of app/components/ untouched.
 """
 from __future__ import annotations
 
@@ -86,6 +87,12 @@ MACROS = {
         function="identifier", tier="binary", clk=False, preview=None,
         description="Corner marker — an alignment/orientation fiducial for the die.",
     ),
+    "eurosynth_art": dict(
+        function="art", tier="binary", clk=False, preview=None,
+        description="Metal-halftone die art — EuroSynth's cover graphic screened "
+                    "onto all five metal layers as a DRC-clean, inert obstruction "
+                    "macro. Made from a color control image (see /studio).",
+    ),
 }
 
 
@@ -116,22 +123,36 @@ def _gzip_gds(src_dir: str, dst_dir: str, name: str) -> None:
 
 
 def main() -> None:
-    src_root = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_SRC
+    args = sys.argv[1:]
+    only: set[str] | None = None
+    if "--only" in args:
+        i = args.index("--only")
+        only = set(args[i + 1].split(","))
+        del args[i:i + 2]
+        unknown = only - MACROS.keys()
+        if unknown:
+            sys.exit(f"--only names not in MACROS: {', '.join(sorted(unknown))}")
+    src_root = args[0] if args else DEFAULT_SRC
     ip_root = os.path.join(src_root, "ip")
     if not os.path.isdir(ip_root):
         sys.exit(f"eurosynth ip/ not found at {ip_root}")
 
-    if os.path.isdir(DEST):
+    # Full import rebuilds from scratch; --only replaces just the named macros.
+    if only is None and os.path.isdir(DEST):
         shutil.rmtree(DEST)
-    os.makedirs(DEST)
+    os.makedirs(DEST, exist_ok=True)
     os.makedirs(PREVIEW_DEST, exist_ok=True)
 
     for name, meta in MACROS.items():
+        if only is not None and name not in only:
+            continue
         src = os.path.join(ip_root, name)
         if not os.path.isdir(src):
             print(f"  skip {name} (not in source)")
             continue
         dst = os.path.join(DEST, name)
+        if os.path.isdir(dst):
+            shutil.rmtree(dst)
         os.makedirs(dst)
 
         # --- copy the four views (GDS compressed, rest verbatim) --------

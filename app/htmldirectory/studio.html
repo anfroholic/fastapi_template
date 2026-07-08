@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block title %}Halftone Studio — Open Silicon Component Exchange{% endblock %}
+{% block content %}
+
+<section class="hero">
+  <h1>Metal Halftone Studio <span class="beta-badge">preview</span></h1>
+  <p>Paint a <b>color control map</b> and see it as a DRC-legal, on-grid <b>metal
+     halftone stencil</b> — the artwork a chip flow can drop onto your die as an
+     inert art macro. Color picks the screen style; saturation picks density.</p>
+</section>
+
+<div class="studio">
+  <aside class="studio-controls">
+    <div class="panel">
+      <span class="filter-title">Control map</span>
+      <label class="btn ghost file-btn">Load PNG…
+        <input type="file" id="file" accept="image/png,image/*" hidden>
+      </label>
+      <button class="btn ghost" id="clear">Clear to white</button>
+
+      <span class="filter-title">Paint</span>
+      <div class="swatches" id="swatches"></div>
+      <label class="slider-row">brush <input type="range" id="brush" min="4" max="250" value="26">
+        <span class="mono" id="brushval">26</span></label>
+
+      <span class="filter-title">Screen</span>
+      <label class="slider-row">pixel&nbsp;size <input type="range" id="pxsize" min="0.40" max="1.20" step="0.05" value="0.60">
+        <span class="mono" id="pxsizeval">0.60 µm</span></label>
+      <label class="slider-row">pitch <input type="range" id="pitch" min="4" max="12" step="1" value="5">
+        <span class="mono" id="pitchval">5 px</span></label>
+      <label class="slider-row" title="Grey halftone cell size — bigger = sparser light greys, more tone levels, AND darker blacks (black = solid with one 2×2 slot hole per cell: 96% fill at 10 px, 99% at 20 px) — art.md §4.4">
+        dot&nbsp;pitch <input type="range" id="dotpitch" min="5" max="20" step="1" value="10">
+        <span class="mono" id="dotpitchval">10 px</span></label>
+      <label class="slider-row" title="Physical size of the macro on the die. Grid = size ÷ pixel size.">
+        size <input type="number" id="sizew" min="60" max="3000" step="10" value="480" class="um-in">
+        × <input type="number" id="sizeh" min="60" max="3000" step="10" value="480" class="um-in"> µm
+        <button id="aspectlock" class="lock-btn" title="aspect locked — editing one side scales the other">🔒</button></label>
+      <label class="slider-row" title="Synthesis grid in pixels (= size ÷ pixel size). Edit to think in pixels instead — the µm size follows. Obeys the aspect lock. Preview caps at 5000 px per side (a 2.5 mm chip at 0.50 µm/px); big grids take a few seconds per render.">
+        grid <input type="number" id="gridw" min="50" max="5000" step="10" value="800" class="um-in">
+        × <input type="number" id="gridh" min="50" max="5000" step="10" value="800" class="um-in"> px</label>
+
+      <details class="tuning">
+        <summary>Tone thresholds</summary>
+        <label class="slider-row">solid&nbsp;V <input type="range" id="solidv" min="0.05" max="0.5" step="0.01" value="0.28">
+          <span class="mono" id="solidvval">0.28</span></label>
+        <label class="slider-row">empty&nbsp;V <input type="range" id="emptyv" min="0.6" max="0.99" step="0.01" value="0.90">
+          <span class="mono" id="emptyvval">0.90</span></label>
+        <label class="slider-row">sat&nbsp;floor <input type="range" id="satfloor" min="0.02" max="0.4" step="0.01" value="0.12">
+          <span class="mono" id="satfloorval">0.12</span></label>
+      </details>
+
+      <span class="filter-title">Export</span>
+      <button class="btn primary" id="dl-control">Download control PNG</button>
+      <button class="btn ghost" id="dl-stencil">Download stencil PNG</button>
+      <p class="small muted">The control PNG is the canonical input: feed it to the
+        studio CLI (<code>mhs art</code>) to emit the DRC-clean GDS + macro views —
+        like the <a href="/component/eurosynth_art">eurosynth_art</a> macro in this
+        catalog.</p>
+    </div>
+
+    <div class="panel">
+      <span class="filter-title">Colors in map</span>
+      <div id="palette-tools">
+        <div class="grey-tone">
+          <span class="grey-tone-title">Grey tone — global curve for all grey halftone</span>
+          <label class="slider-row">brightness <input type="range" id="gbright" min="-0.5" max="0.5" step="0.01" value="0">
+            <span class="mono" id="gbrightval">0.00</span></label>
+          <label class="slider-row">contrast <input type="range" id="gcontrast" min="0.25" max="3" step="0.05" value="1">
+            <span class="mono" id="gcontrastval">1.00</span></label>
+          <label class="slider-row">gamma <input type="range" id="ggamma" min="0.3" max="3" step="0.05" value="1">
+            <span class="mono" id="ggammaval">1.00</span></label>
+          <button class="btn ghost gt-reset" id="gtreset">↺ reset tone</button>
+        </div>
+        <div class="palette" id="palette"></div>
+      </div>
+      <p class="small muted">Every color found in the control map, biggest first.
+        The tone knobs reshape all greys at once (lift the lights, crush the darks);
+        per-color overrides below are for targeted fixes and win over the curve.</p>
+    </div>
+
+    <div class="panel legend-panel">
+      <span class="filter-title">Legend</span>
+      <ul class="style-legend" id="legend"></ul>
+      <p class="small muted">More saturated = denser metal. Darker grey = denser
+        lines. Black stays solid, white stays empty.</p>
+    </div>
+  </aside>
+
+  <section class="studio-canvases">
+    <div class="panel">
+      <div class="canvas-pair">
+        <figure>
+          <figcaption>Control (paint here)</figcaption>
+          <canvas id="control" width="800" height="800"></canvas>
+        </figure>
+        <figure>
+          <figcaption>Output — 1-bit metal stencil <span class="muted">(click for full view)</span></figcaption>
+          <canvas id="output" width="800" height="800"></canvas>
+        </figure>
+      </div>
+      <div class="studio-stats">
+        <span class="stat"><b id="coverage">–</b> metal coverage
+          <span class="muted small">(die needs &gt;30% overall — dummy fill handles that at integration)</span></span>
+        <span class="stat mslot-ok" id="mslotinfo">–</span>
+        <span class="stat mono" id="gridinfo">–</span>
+        <span class="stat mono" id="shapeinfo">–</span>
+        <button class="btn ghost" id="fullbtn">⛶ Full view</button>
+      </div>
+      <div class="inspector-row">
+        <canvas id="zoom" width="189" height="189"></canvas>
+        <p class="small muted">Pixel inspector — hover the output. Every feature and
+          gap should stay ≥ 2 grid px so it clears min-width / min-space after
+          cleanup; the on-grid synthesis + 2×2 open + declobber passes shown here
+          are the same ones the generator runs before writing GDS.</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div id="fullview" class="fullview" hidden>
+  <div class="fv-bar">
+    <span class="fv-title" id="fv-title">Stencil — full view</span>
+    <button class="btn ghost" id="fv-src">show control</button>
+    <button class="btn ghost" id="fv-fit">fit</button>
+    <button class="btn ghost" id="fv-100">1:1</button>
+    <span class="mono" id="fv-zoom"></span>
+    <span class="fv-hint">wheel = zoom &nbsp;·&nbsp; drag = pan &nbsp;·&nbsp; Esc = close</span>
+    <button class="btn ghost" id="fv-close">✕ close</button>
+  </div>
+  <div class="fv-body">
+    <canvas id="fvcanvas"></canvas>
+    <aside class="fv-side">
+      <span class="filter-title">Colors in map</span>
+      <div id="fv-palette-slot"></div>
+      <p class="small muted">Remap a color's style or density and watch the whole
+        stencil update live.</p>
+    </aside>
+  </div>
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script src="/static/studio.js"></script>
+{% endblock %}

@@ -6,6 +6,7 @@
   <title>{% block title %}Open Silicon Component Exchange{% endblock %}</title>
   <link rel="icon" href="/static/favicon.ico">
   <link rel="stylesheet" href="/static/style.css">
+  {% block head %}{% endblock %}
 </head>
 <body>
   <header class="topbar">
@@ -20,6 +21,7 @@
     </form>
     <nav class="topnav">
       <a href="/">Browse</a>
+      <a href="/studio">Studio</a>
       <a class="ghost" href="#" title="Not part of this prototype">Publish</a>
     </nav>
   </header>
@@ -32,5 +34,6 @@
     <span>A “Thingiverse for chips” — publish and drop-in pre-hardened silicon macros.</span>
     <span class="muted">Prototype · display &amp; UX focus</span>
   </footer>
+  {% block scripts %}{% endblock %}
 </body>
 </html>

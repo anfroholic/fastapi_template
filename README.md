@@ -11,8 +11,8 @@ Built on the FastAPI + Jinja2 template — no database, no frontend build step.
 
 The catalog is seeded with **real hardened macros imported from [EuroSynth](https://github.com/anfroholic/eurosynth)** —
 five GF180MCU audio-synth engines (Karplus–Strong, neural oscillator, chaos, SID,
-bytebeat) plus the wafer.space shuttle-ID blocks — each with genuine GDS / LEF /
-Verilog / 9-corner Liberty views.
+bytebeat), the wafer.space shuttle-ID blocks, and a **metal-halftone die-art
+macro** — each with genuine GDS / LEF / Verilog / Liberty views.
 
 ## What's here
 
@@ -28,9 +28,25 @@ Verilog / 9-corner Liberty views.
   - an inline **audio preview** for the engines,
   - **signoff traffic lights** (DRC / LVS / setup / hold),
   - a **corner-coverage matrix** (process × operating point, N of 9),
-  - the four EDA views explained + inline file viewing,
+  - a **Files** panel listing every file in the package (grouped by view, with
+    sizes), and an **in-browser viewer** — click *view* to read any text file
+    (`component.yaml`, `.lef`, `.vh`, `.lib`) with syntax highlighting and line
+    numbers in a modal; binaries download,
   - a copy-paste `MACROS:` integration snippet, specs, and a provenance link.
 - **Downloads** — whole-package `.zip` on the fly, or any single view file.
+- **Studio** (`/studio`) — the *create* side: a live **Metal Halftone Studio**
+  preview. Paint a color control map (color → screen style, saturation → density)
+  and watch it synthesize the exact on-grid, 1-bit metal stencil a die-art macro
+  is built from — same pipeline the generator runs (resize-to-grid first, HSV
+  classify, on-grid screens, 2×2 open, declobber), with live metal-coverage %, a
+  **live wide-metal (MSLOT) check** that outlines any solid region big enough to
+  need stress-relief slots, a pixel inspector, a full-screen zoom/pan preview, a
+  **per-color remap panel**
+  (every color in the map broken out — override its screen style or fill density
+  when the automatic mapping isn't the weight you pictured), aspect-ratio-true
+  image import, and control-PNG export. The full spec lives in
+  [`art.md`](art.md); the [`eurosynth_art`](app/components/eurosynth_art) macro
+  in the catalog is a real output of that pipeline.
 
 ## The "GDS view" — how it's rendered, and what it costs
 
@@ -92,8 +108,10 @@ Each package under `app/components/<name>/` follows the spec's 4-view layout:
 | `app/render_gds.py` | Rasterizes each GDS to a PNG via headless KLayout (the "GDS view") |
 | `app/import_eurosynth.py` | Imports real hardened macros from the EuroSynth repo |
 | `app/seed_components.py` | Generates synthetic sample packages |
-| `app/htmldirectory/*.html` | Jinja templates (`base`, `catalog`, `detail`, `_widgets`) |
+| `app/htmldirectory/*.html` | Jinja templates (`base`, `catalog`, `detail`, `studio`, `_widgets`) |
+| `app/static/studio.js` | Halftone Studio: the in-browser control-map → stencil pipeline |
 | `app/static/style.css` | Theme |
+| `art.md` | Metal Halftone Studio spec (the generator the studio previews) |
 
 ## Run it
 

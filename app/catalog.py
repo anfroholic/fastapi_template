@@ -29,10 +29,36 @@ FUNCTION_ICONS = {
     "dsp": "🎚️",
     "identifier": "🔖",
     "branding": "✨",
+    "art": "🎨",
 }
 
 # The signoff checks we surface as traffic-light pips, in display order.
 SIGNOFF_CHECKS = ["drc", "lvs", "setup", "hold"]
+
+# File categorization for the Files panel / in-browser viewer.
+TEXT_EXTS = {".yaml", ".yml", ".lef", ".vh", ".v", ".sv", ".svh", ".lib",
+             ".sdc", ".tcl", ".md", ".txt", ".json", ".cfg", ".hex"}
+IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".gif", ".svg"}
+AUDIO_EXTS = {".wav", ".mp3", ".ogg", ".flac"}
+
+
+def _file_kind(filename: str) -> str:
+    ext = os.path.splitext(filename)[1].lower()
+    if ext in TEXT_EXTS:
+        return "text"
+    if ext in IMAGE_EXTS:
+        return "image"
+    if ext in AUDIO_EXTS:
+        return "audio"
+    return "binary"
+
+
+def _human_size(n: float) -> str:
+    for unit in ("B", "KB", "MB", "GB"):
+        if n < 1024 or unit == "GB":
+            return f"{int(n)} {unit}" if unit == "B" else f"{n:.1f} {unit}"
+        n /= 1024
+    return f"{n:.1f} GB"
 
 # Corner matrix axes.
 CORNER_POINTS = ["min", "nom", "max"]          # operating point (columns)
@@ -152,16 +178,47 @@ class Component:
                 return f"gds/{self.name}{ext}"
         return f"gds/{self.name}.gds"
 
+    def list_files(self) -> list[dict]:
+        """The package's files grouped by view dir, with size/kind/viewability.
+
+        Drives the detail page's Files panel and its in-browser viewer.
+        """
+        groups: dict[str, list[dict]] = {}
+        for root, _dirs, files in os.walk(self.path):
+            for fn in sorted(files):
+                full = os.path.join(root, fn)
+                rel = os.path.relpath(full, self.path).replace(os.sep, "/")
+                top = rel.split("/")[0] if "/" in rel else "."
+                sub = rel[len(top) + 1:] if top != "." else rel
+                kind = _file_kind(fn)
+                groups.setdefault(top, []).append({
+                    "name": sub,           # path within the group (shows lib corner)
+                    "rel": rel,            # full path within the package
+                    "size": os.path.getsize(full),
+                    "size_h": _human_size(os.path.getsize(full)),
+                    "kind": kind,
+                    "viewable": kind == "text",
+                })
+        order = ["component.yaml", "vh", "lef", "lib", "gds", "render"]
+        top_order = {".": -1}
+        top_order.update({k: i for i, k in enumerate(order)})
+        return [
+            {"dir": ("(root)" if d == "." else d), "files": groups[d]}
+            for d in sorted(groups, key=lambda d: top_order.get(d, 99))
+        ]
+
     @property
     def macros_snippet(self) -> str:
         """The payoff: drop this into a flow's MACROS: list and it just works."""
+        # Corner-less packages (art, ID blocks) ship one flat lib, not per-corner dirs.
+        lib = f"lib/*/{self.name}__*.lib" if self.corners else f"lib/{self.name}.lib"
         return (
             "MACROS:\n"
             f"  - name: {self.name}\n"
             f"    pdk: {self.pdk}\n"
             f"    lef: lef/{self.name}.lef\n"
             f"    gds: {self.gds_rel}\n"
-            f"    lib: lib/*/{self.name}__*.lib\n"
+            f"    lib: {lib}\n"
         )
 
 

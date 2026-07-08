@@ -1,0 +1,22 @@
+name: eurosynth_art
+description: "Metal-halftone die art \u2014 EuroSynth's cover graphic screened onto\
+  \ all five metal layers as a DRC-clean, inert obstruction macro. Made from a color\
+  \ control image (see /studio)."
+function: art
+pdk: gf180mcuD
+node: 180nm
+stdcell: gf180mcu_fd_sc_mcu7t5v0
+corners: []
+clock: {}
+size_um:
+- 480.0
+- 480.0
+signoff:
+  drc: clean
+  lvs: clean
+  setup: pass
+  hold: pass
+license: Apache-2.0
+source: https://github.com/anfroholic/eurosynth
+tier: binary
+preview_audio: false

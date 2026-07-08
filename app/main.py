@@ -65,6 +65,12 @@ async def catalog(
     )
 
 
+@app.get("/studio", response_class=HTMLResponse)
+async def studio(request: Request):
+    """Metal Halftone Studio — live in-browser preview of the die-art pipeline."""
+    return templates.TemplateResponse(request, "studio.html", {})
+
+
 @app.get("/component/{name}", response_class=HTMLResponse)
 async def component_detail(request: Request, name: str):
     comp = CATALOG.get(name)
